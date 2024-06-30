@@ -40,13 +40,14 @@ const useMyStore = defineStore('my', {
         auths:state.auths
       };
     },
-    isTimeout: (state): boolean => {
-      if (!state.refresh_at) {
-        let at = getRefreshAt();
-        state.refresh_at = at;
-      }
-      return new Date().valueOf() / 1000 > state.refresh_at;
-    },
+    // isTimeout: (state): boolean => {
+    //   if (!state.refresh_at) {
+    //     let at = getRefreshAt();
+    //     state.refresh_at = at;
+    //   }
+    //   console.log("[timeOut]:now:",new Date().valueOf() / 1000,"refresh_at:",state.refresh_at,"isture:",new Date().valueOf() / 1000 > state.refresh_at)
+    //   return new Date().valueOf() / 1000 > state.refresh_at;
+    // },
     getToken: (state): string => {
       if (!state.access_token) {
         state.access_token = getToken();
@@ -62,6 +63,14 @@ const useMyStore = defineStore('my', {
   },
 
   actions: {
+    isTimeOut(){
+      if (!this.refresh_at) {
+        let at = getRefreshAt();
+        this.refresh_at = at;
+      }
+      // console.log("[isTimeOut]:now:",new Date().valueOf() / 1000,"refresh_at:",this.refresh_at,"isflash:",new Date().valueOf() / 1000 > this.refresh_at)
+      return new Date().valueOf() / 1000 > this.refresh_at;
+    },
     resetInfo() {
       this.$reset();
     },
@@ -71,15 +80,23 @@ const useMyStore = defineStore('my', {
       this.memo = data.memo;
       this.email = data.email;
     },
+
+    //检查token 超期进行请求
     async checkToken() {
-      if (this.isTimeout) {
+      // console.log("[checkToken刷新] istimeout token",this.getRefreshToken)
+      if (this.isTimeOut() && this.getRefreshToken) {
+
+        // console.log("checkToken:",this.isTimeout,this.getRefreshToken)
+        // console.log("开始刷新token")
         const res = await refreshtoken({ refresh_token: this.getRefreshToken });
-        setRefreshAt(res.refresh_at);
+        setRefreshAt(res.token_exp);
         setRefreshToken(res.refresh_token);
-        setToken(res.token);
+        setToken(res.access_token);
         this.access_token = res.token;
-        this.refresh_at = res.refresh_at;
-        this.refresh_token = res.token;
+        this.refresh_at = res.token_exp;
+        this.refresh_token = res.access_token;
+        // console.log("刷新结束token",res)
+
       }
     },
     setToken(token: string, refresToken: string, refreshAt: number) {
@@ -134,7 +151,7 @@ const useMyStore = defineStore('my', {
         console.log('logint==');
         const res = await myLogin(loginForm);
 
-        this.setToken(res.access_token, res.refresh_token, res.refresh_at);
+        this.setToken(res.access_token, res.refresh_token, res.token_exp);
         console.log('logresponse:', res);
       } catch (err) {
         console.log('login error:', err, (err as Error).message);

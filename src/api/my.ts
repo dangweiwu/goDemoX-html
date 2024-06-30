@@ -1,4 +1,7 @@
-import axios from 'axios';
+ import axios from 'axios';
+ 
+ import baseReq from './base';
+ import req from './req'
 
 export interface LoginData {
   account: string;
@@ -10,34 +13,39 @@ export interface RefreshToken {
 }
 
 export function login(data: LoginData) {
-  return axios.post('/api/login', data);
+  return baseReq.post('/api/login', data);
 }
 
 export function logout() {
-  return axios.post('/api/logout');
+  return req.post('/api/logout');
 }
 
 export function myInfo() {
-  return axios.get('/api/my');
+  return req.get('/api/my');
 }
 
 //token 刷新
 export function refreshtoken(t: RefreshToken) {
-  return axios.post('/api/token/refresh', t);
+
+  return baseReq.post('/api/token/refresh',{},{
+    headers: {
+      'Authorization': 'Bearer ' + t.refresh_token
+    }
+  })
 }
 
 //设置
 export function setinfo(data) {
-  return axios.put('/api/my', data);
+  return req.put('/api/my', data);
 }
 
 //设置密码
 export function setPassword(data) {
-  return axios.put('/api/my/password', data);
+  return req.put('/api/my/password', data);
 }
 
 
 //获取我的权限
 export function apiMyAuth(){
-  return axios.get('/api/my-auth')
+  return req.get('/api/my-auth')
 }

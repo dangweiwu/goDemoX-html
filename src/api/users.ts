@@ -1,16 +1,16 @@
-import axios from 'axios';
+import req from './req'
 
 export function apiUsers(params) {
-  return axios.get('/api/admin', { params });
+  return req.get('/api/admin', { params });
 }
 export function apiCreateUser(data) {
-  return axios.post('/api/admin', data);
+  return req.post('/api/admin', data);
 }
 
 export function apiUpdateUser(id, data) {
-  return axios.put('/api/admin/' + id, data);
+  return req.put('/api/admin/' + id, data);
 }
 
 export function apiDelUser(id) {
-  return axios.delete('/api/admin/' + id);
+  return req.delete('/api/admin/' + id);
 }

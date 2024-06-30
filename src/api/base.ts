@@ -2,37 +2,25 @@ import axios from 'axios';
 import type { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { Message, Modal,Notification } from '@arco-design/web-vue';
 import { useMyStore } from '@/store';
+import {ApiConfig} from './config'
+//token处理
 
-export interface HttpResponse<T = unknown> {
-  status: number;
-  msg: string;
-  code: number;
-  data: T;
-}
 
-if (import.meta.env.VITE_API_BASE_URL) {
-  axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
-}
-
-axios.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
-    const tokenStore = useMyStore();
-    if (tokenStore.getToken) {
-      if (!config.headers) {
-        config.headers = {};
-      }
-      config.headers.Authorization = `Bearer ${tokenStore.access_token}`;
-    }
-    return config;
+const baseReq = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json;charset=UTF-8',
   },
-  (error) => {
-    // do something
-    return Promise.reject(error);
-  }
-);
-// add response interceptors
-axios.interceptors.response.use(
+});
+
+
+
+baseReq.interceptors.response.use(
   (response: AxiosResponse<HttpResponse>) => {
+    if(ApiConfig.END_TAG){
+      return Promise.reject(new Error("END"))
+    }
     const res = response.data;
     return res;
   },
@@ -40,7 +28,9 @@ axios.interceptors.response.use(
     // if status 404 must error
     // if network error must error no response
     // if status 400 must error
-
+    if(ApiConfig.END_TAG){
+      return;
+    }
     let errMsg = '';
     let context = '';
     if (error.response === undefined) {
@@ -56,6 +46,7 @@ axios.interceptors.response.use(
       // 系统错误
       errMsg = error.response.data;
     } else if (error.response.status === 401) {
+      ApiConfig.END_TAG = true
       // 重新登陆
       Modal.error({
         title: '您已退出登录',
@@ -81,3 +72,6 @@ axios.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+
+export default baseReq 
